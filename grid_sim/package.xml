@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>grid_sim</name>
+  <version>0.0.0</version>
+  <description>The grid_sim package</description>
+
+  <maintainer email="opfer@vs.uni-kassel.de">Stephan Opfer</maintainer>
+
+  <license>MIT</license>
+
+  <depend>capnzero</depend>
+  <depend>alica_capnzero_proxy</depend>
+  <depend>id_capnzero</depend>
+  <depend>id_manager</depend>
+  <depend>fsystem</depend>
+  <depend>system_config</depend>
+  <depend>cnc_geometry</depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+  </export>
+</package>
