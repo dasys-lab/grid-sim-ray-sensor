@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include "Coordinate.h"
 
 namespace srgsim
 {
@@ -14,8 +15,8 @@ public:
     float m;
     float b;
 
-    float calculateX(float y);
-    float calculateY(float x);
+    float calculateX(int y);
+    float calculateY(int x);
 
     friend std::ostream& operator<<(std::ostream& os, const srgsim::Function& obj)
     {
