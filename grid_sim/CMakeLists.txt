@@ -70,12 +70,12 @@ foreach(ResourceFile ${ResourceFiles})
     make_directory $<TARGET_FILE_DIR:grid_sim>/textures/
   )
 endforeach()
-
 ############### World
 add_library(${PROJECT_NAME}_world
         src/world/World.cpp
         src/world/Cell.cpp
         src/container/Coordinate.cpp
+        src/container/Function.cpp
         src/world/Object.cpp
         src/world/Door.cpp
         src/world/ServiceRobot.cpp

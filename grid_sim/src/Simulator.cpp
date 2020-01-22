@@ -36,7 +36,7 @@ Simulator::Simulator(bool headless)
     this->world = new World();
     this->placeObjectsFromConf();
 //    ObjectDetection od (nullptr);
-//    od.collectCells(Coordinate(5,26), Coordinate(-5,29), world);
+//    od.collectCoordinates(Coordinate(5,26), Coordinate(-5,29), world);
 //    return;
     this->communicationHandlers.push_back(new commands::MoveCommandHandler(world));
     this->communicationHandlers.push_back(new commands::ManipulationHandler(world));
