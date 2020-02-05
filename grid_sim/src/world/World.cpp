@@ -28,7 +28,6 @@ World::World(std::string tmxMapFile)
         }
     }
 }
-
 World::~World()
 {
     for (auto pair : this->cellGrid) {

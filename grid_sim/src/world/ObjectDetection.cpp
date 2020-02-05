@@ -1,5 +1,6 @@
 #include "srgsim/world/ObjectDetection.h"
 #include "srgsim/SRGEnums.h"
+#include "srgsim/containers/FloatCoordinate.h"
 #include "srgsim/containers/Coordinate.h"
 #include "srgsim/world/Cell.h"
 #include "srgsim/world/ServiceRobot.h"
@@ -59,24 +60,24 @@ namespace srgsim {
     }
 
     //Finding nearest points
-    double calculateDistance(Coordinate* a, Coordinate* b){
-        double x = (b->x - a->x)^2;
-        double y = (b->y - a->y)^2;
+    double calculateDistance(FloatCoordinate a, FloatCoordinate b){
+        double x = (b.x - a.x)*(b.x - a.x);
+        double y = (b.y - a.y)*(b.y - a.y);
         double z = x + y;
         return sqrt(z);
     }
 
-    vector<Coordinate*> findNearestPoints(Coordinate* point, vector<Coordinate*> points) {
-        vector<Coordinate*> nearestPoints;
+    vector<FloatCoordinate> findNearestPoints(FloatCoordinate intersection, vector<FloatCoordinate> pointsToConsider) {
+        vector<FloatCoordinate> nearestPoints;
         float smallestDistance = FLT_MAX;
 
-        for (Coordinate* p : points) {
-            float currentDistance = calculateDistance(p, point);
+        for (FloatCoordinate p : pointsToConsider) {
+            float currentDistance = calculateDistance(p, intersection);
 
             if(currentDistance == smallestDistance){
                 nearestPoints.emplace_back(p);
             } else if (currentDistance < smallestDistance){
-                nearestPoints.empty();
+                nearestPoints.clear();
                 nearestPoints.emplace_back(p);
                 smallestDistance = currentDistance;
             }
@@ -84,37 +85,35 @@ namespace srgsim {
         return nearestPoints;
     }
 
-    std::vector<Coordinate*> findPointsToConsider(Coordinate* positionOfRobot) {
-        std::vector<Coordinate*> resultPoints;
-        float x = positionOfRobot->x;
-        float y = positionOfRobot->y;
+    std::vector<FloatCoordinate> findPointsToConsider(float x, float y) {
+        std::vector<FloatCoordinate> resultPoints;
 
-        bool xMin = positionOfRobot->x == X_MIN_VALUE;
-        bool xMax = positionOfRobot->x == X_MAX_VALUE;
-        bool yMin = positionOfRobot->y == Y_MIN_VALUE;
-        bool yMax = positionOfRobot->y == Y_MAX_VALUE;
+        bool xMin = x == X_MIN_VALUE;
+        bool xMax = x == X_MAX_VALUE;
+        bool yMin = y == Y_MIN_VALUE;
+        bool yMax = y == Y_MAX_VALUE;
 
         if (!xMin) {
-            resultPoints.emplace_back(Coordinate(x-1, y));
+            resultPoints.emplace_back(FloatCoordinate(x-1,y));
             if (!yMin) {
-                resultPoints.emplace_back(Coordinate(x, y-1));
-                resultPoints.emplace_back(Coordinate(x-1, y-1));
+                resultPoints.emplace_back(FloatCoordinate(x, y-1));
+                resultPoints.emplace_back(FloatCoordinate(x-1, y-1));
             }
 
             if (!yMax) {
-                resultPoints.emplace_back(Coordinate(x, y+1));
-                resultPoints.emplace_back(Coordinate(x-1, y+1));
+                resultPoints.emplace_back(FloatCoordinate(x, y+1));
+                resultPoints.emplace_back(FloatCoordinate(x-1, y+1));
             }
         }
 
         if (!xMax) {
-            resultPoints.emplace_back(Coordinate(x+1, y));
+            resultPoints.emplace_back(FloatCoordinate(x+1, y));
             if (!yMin) {
-                resultPoints.emplace_back(Coordinate(x+1, y-1));
+                resultPoints.emplace_back(FloatCoordinate(x+1, y-1));
             }
 
             if (!yMax) {
-                resultPoints.emplace_back(Coordinate(x+1, y+1));
+                resultPoints.emplace_back(FloatCoordinate(x+1, y+1));
             }
         }
 
@@ -122,15 +121,21 @@ namespace srgsim {
     }
 
 
-    std::vector<Coordinate*> findNearestNeighbours(Coordinate* point) {
-        Coordinate* convertedPoint = new Coordinate(round(point->x - 0.5F) + 0.5F, round(point->y - 0.5F) + 0.5F);
-        vector<Coordinate*> pointsToConsider = findPointsToConsider(convertedPoint);
-        vector<Coordinate*> result = findNearestPoints(point, pointsToConsider);
+    std::vector<Coordinate> findNearestNeighbours(FloatCoordinate positionOfRobot, FloatCoordinate intersection) {
+        vector<FloatCoordinate> pointsToConsider =
+                findPointsToConsider(round(positionOfRobot.x - 0.5F) + 0.5F, round(positionOfRobot.y - 0.5F) + 0.5F);
+        vector<FloatCoordinate> floatResult = findNearestPoints(intersection, pointsToConsider);
+        vector<Coordinate> result;
+
+        for(FloatCoordinate coordinate: floatResult){
+            result.push_back(Coordinate(coordinate.x, coordinate.y));
+        }
+
         return result;
     }
 
-    std::vector<const Cell *> ObjectDetection::collectCells(Coordinate start, Coordinate end, World *world) {
-        std::vector<const Cell *> cells;
+    std::vector<const Cell*> ObjectDetection::collectCells(Coordinate start, Coordinate end, World *world) {
+        std::vector<const Cell*> cells;
 
         std::map<Coordinate, Cell *> grid = world->getGrid();
         const Cell* cell = world->getCell(start);
@@ -139,56 +144,77 @@ namespace srgsim {
         Function* function = new Function(start, end);
 
         // find all transition points between cells
-        std::vector<Coordinate*> intersections;
+        std::set<FloatCoordinate> intersections;
 
-        int x;
-        int y;
+        // TODO m = inf
 
         if (start.x <= end.x) {
-            x = (int) start.x + 1;
-            for (int i = x; i <= end.x; i++) {
+            for (int i = start.x+1; i <= end.x; i++) {
                 float resultY = function->calculateY(i);
-                intersections.emplace_back(Coordinate(x, resultY));
+                intersections.insert(FloatCoordinate((float) i, resultY));
                 //System.out.println("P(" + i + "|" + resultY + ")");
             }
         } else {
-            x = (int) end.x + 1;
-            for (int i = x; i <= start.x; i++) {
+            for (int i = start.x-1; i >= end.x; i--) {
                 float resultY = function->calculateY(i);
-                intersections.emplace_back(Coordinate(x, resultY));
+                intersections.insert(FloatCoordinate((float) i, resultY));
                 //System.out.println("P(" + i + "|" + resultY + ")");
             }
         }
 
         if(start.y <= end.y) {
-            y = (int) start.y + 1;
-            for (int i = y; i <= end.y; i++) {
+            for (int i = start.y+1; i <= end.y; i++) {
                 float resultX = function->calculateX(i);
-                intersections.emplace_back(Coordinate(resultX, i));
+                intersections.insert(FloatCoordinate(resultX, (float) i));
                 //System.out.println("Q(" + resultX + "|" + i + ")");
             }
         } else {
-            y = (int) end.y + 1;
-            for (int i = y; i <= start.y; i++) {
+            for (int i = start.y-1; i >= end.y; i--) {
                 float resultX = function->calculateX(i);
-                intersections.emplace_back(Coordinate(resultX, i));
+                intersections.insert(FloatCoordinate(resultX, (float) i));
                 //System.out.println("Q(" + resultX + "|" + i + ")");
             }
         }
 
-        for (Coordinate* intersection: intersections){
-            if(isnan(intersection->x)){
+        //TODO: Sort intersections
+
+        vector<const Cell*> result;
+        Coordinate currentCell = start;
+
+        for (FloatCoordinate intersection: intersections){
+            if(isinf(intersection.x)){
                 // Ray is traveling directly upwards or downwards
-                intersection->x = start.x;
+                intersection.x = start.x;
             }
 
-            std::cout << "Intersection: (" << intersection->x << "," << intersection->y << ")" << std::endl;
-            std::vector<Coordinate*> nearestNeighbours = findNearestNeighbours(intersection);
-            for (Coordinate* nearestNeighbour : nearestNeighbours) {
-                std::cout << "    Nearest Neighbor: (" << (nearestNeighbour->x -0.5F) << "," << (nearestNeighbour->x + 0.5F) << ")";
+            FloatCoordinate currentCellFloat = FloatCoordinate(currentCell.x +0.5F, currentCell.y +0.5F);
+
+            std::cout << "Intersection: (" << intersection.x << "," << intersection.y << ")" << std::endl;
+            std::vector<Coordinate> nearestNeighbours = findNearestNeighbours(currentCellFloat, intersection);
+
+            if(nearestNeighbours.size() == 1){
+                Coordinate nearestNeighbour = nearestNeighbours.at(0);
+
+                std::cout << "      Nearest Neighbor: (" << nearestNeighbour.x << "," << nearestNeighbour.y << ")" << std::endl;
+
+                result.push_back(world->getCell(nearestNeighbour));
+
+                currentCell = nearestNeighbour;
             }
+
+            if (nearestNeighbours.size() == 3){
+                // Diagonal Direction
+
+                for (Coordinate nearestNeighbour: nearestNeighbours){
+                    if(nearestNeighbour.x != currentCell.x && nearestNeighbour.y != currentCell.y){
+                        std::cout << "      Nearest Neighbor: (" << nearestNeighbour.x << "," << nearestNeighbour.y << ")" << std::endl;
+                        currentCell = nearestNeighbour;
+                    }
+                }
+            }
+
         }
 
-        return intersections;
+        return result;
     }
 } // namespace srgsim

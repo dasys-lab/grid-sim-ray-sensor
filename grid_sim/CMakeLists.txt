@@ -74,6 +74,7 @@ endforeach()
 add_library(${PROJECT_NAME}_world
         src/world/World.cpp
         src/world/Cell.cpp
+        src/container/FloatCoordinate.cpp
         src/container/Coordinate.cpp
         src/container/Function.cpp
         src/world/Object.cpp
