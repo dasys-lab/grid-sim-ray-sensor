@@ -5,21 +5,22 @@
 #include <iostream>
 #include <srgsim/containers/Function.h>
 #include <math.h>
+#include <srgsim/containers/FloatCoordinate.h>
 
 namespace srgsim {
-    Function::Function(Coordinate& start, Coordinate& end) {
+    Function::Function(FloatCoordinate& start, FloatCoordinate& end) {
         float a = (end.y - start.y);
         float b = (end.x - start.x);
         m = a / b;
 
         if(isinf(m)){
             this->b = 0;
-            std::cout << "m = " << m << " a = " << a << " b = " << b << std::endl;
+            std::cout << "m = " << m << " b = " << this->b << std::endl;
             return;
         }
 
-        std::cout << "m = " << m << " a = " << a << " b = " << b << std::endl;
         this->b = (end.x * start.y - start.x * end.y) / (end.x - start.x);
+        std::cout << "m = " << m << " b = " << this->b << std::endl;
     }
 
     float Function::calculateY(int x) {

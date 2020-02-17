@@ -36,8 +36,15 @@ Simulator::Simulator(bool headless)
     this->world = new World();
     this->placeObjectsFromConf();
     ObjectDetection od (nullptr);
-    // TODO: Intersection for start.y = end.y incorrect
+    od.collectCells(Coordinate(5,5), Coordinate(8,8), world);
+    od.collectCells(Coordinate(5,5), Coordinate(5,8), world);
     od.collectCells(Coordinate(5,8), Coordinate(5,5), world);
+    od.collectCells(Coordinate(5,5), Coordinate(8,5), world);
+    od.collectCells(Coordinate(5,5), Coordinate(2,5), world);
+    od.collectCells(Coordinate(5,5), Coordinate(9,12), world);
+    od.collectCells(Coordinate(9,12), Coordinate(5,5), world);
+    od.collectCells(Coordinate(5,5), Coordinate(12,9), world);
+    od.collectCells(Coordinate(12,9), Coordinate(5,5), world);
 //    return;
     this->communicationHandlers.push_back(new commands::MoveCommandHandler(world));
     this->communicationHandlers.push_back(new commands::ManipulationHandler(world));

@@ -30,4 +30,14 @@ namespace srgsim {
         }
     }
 
+    bool operator>(FloatCoordinate const &first, FloatCoordinate const &second) {
+        if (first.x < second.x) {
+            return false;
+        } else if (first.x > second.x) {
+            return true;
+        } else {
+            return (first.y > second.y);
+        }
+    }
+
 } // namespace srgsim

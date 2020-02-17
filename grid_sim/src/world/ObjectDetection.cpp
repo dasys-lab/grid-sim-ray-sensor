@@ -122,8 +122,7 @@ namespace srgsim {
 
 
     std::vector<Coordinate> findNearestNeighbours(FloatCoordinate positionOfRobot, FloatCoordinate intersection) {
-        vector<FloatCoordinate> pointsToConsider =
-                findPointsToConsider(round(positionOfRobot.x - 0.5F) + 0.5F, round(positionOfRobot.y - 0.5F) + 0.5F);
+        vector<FloatCoordinate> pointsToConsider = findPointsToConsider(positionOfRobot.x, positionOfRobot.y);
         vector<FloatCoordinate> floatResult = findNearestPoints(intersection, pointsToConsider);
         vector<Coordinate> result;
 
@@ -135,80 +134,84 @@ namespace srgsim {
     }
 
     std::vector<const Cell*> ObjectDetection::collectCells(Coordinate start, Coordinate end, World *world) {
+        FloatCoordinate startFloat = FloatCoordinate(start.x +0.5F, start.y +0.5F);
+        FloatCoordinate endFloat = FloatCoordinate(end.x +0.5F, end.y +0.5F);
         std::vector<const Cell*> cells;
 
-        std::map<Coordinate, Cell *> grid = world->getGrid();
-        const Cell* cell = world->getCell(start);
-
         // calculate function with start/end point
-        Function* function = new Function(start, end);
+        Function* function = new Function(startFloat, endFloat);
 
         // find all transition points between cells
-        std::set<FloatCoordinate> intersections;
+        std::vector<FloatCoordinate> intersections;
 
-        // TODO m = inf
+        // m = 1 means that our function is diagonal, so we must not cover both axis.
+        bool isDiagonal = function->m == 1 || function->m == -1;
 
         if (start.x <= end.x) {
             for (int i = start.x+1; i <= end.x; i++) {
                 float resultY = function->calculateY(i);
-                intersections.insert(FloatCoordinate((float) i, resultY));
+                intersections.emplace_back(FloatCoordinate((float) i, resultY));
                 //System.out.println("P(" + i + "|" + resultY + ")");
             }
         } else {
-            for (int i = start.x-1; i >= end.x; i--) {
+            for (int i = start.x; i >= end.x+1; i--) {
                 float resultY = function->calculateY(i);
-                intersections.insert(FloatCoordinate((float) i, resultY));
+                intersections.emplace_back(FloatCoordinate((float) i, resultY));
                 //System.out.println("P(" + i + "|" + resultY + ")");
             }
         }
 
-        if(start.y <= end.y) {
-            for (int i = start.y+1; i <= end.y; i++) {
-                float resultX = function->calculateX(i);
-                intersections.insert(FloatCoordinate(resultX, (float) i));
-                //System.out.println("Q(" + resultX + "|" + i + ")");
-            }
-        } else {
-            for (int i = start.y-1; i >= end.y; i--) {
-                float resultX = function->calculateX(i);
-                intersections.insert(FloatCoordinate(resultX, (float) i));
-                //System.out.println("Q(" + resultX + "|" + i + ")");
+        if(!isDiagonal){
+            if(start.y <= end.y) {
+                for (int i = start.y+1; i <= end.y; i++) {
+                    float resultX = function->calculateX(i);
+                    if(isinf(resultX)){
+                        resultX = startFloat.x;
+                    }
+                    intersections.emplace_back(FloatCoordinate(resultX, (float) i));
+                    //System.out.println("Q(" + resultX + "|" + i + ")");
+                }
+            } else {
+                for (int i = start.y; i >= end.y+1; i--) {
+                    float resultX = function->calculateX(i);
+                    if(isinf(resultX)){
+                        resultX = startFloat.x;
+                    }
+                    intersections.emplace_back(FloatCoordinate(resultX, (float) i));
+                    //System.out.println("Q(" + resultX + "|" + i + ")");
+                }
             }
         }
 
-        //TODO: Sort intersections
+        if(start.x < end.x){
+            std::sort(intersections.begin(), intersections.end());
+        } else if (start.x > end.x){
+            std::sort(intersections.rbegin(), intersections.rend());
+        }
 
         vector<const Cell*> result;
-        Coordinate currentCell = start;
+        FloatCoordinate currentCell = startFloat;
 
         for (FloatCoordinate intersection: intersections){
-            if(isinf(intersection.x)){
-                // Ray is traveling directly upwards or downwards
-                intersection.x = start.x;
-            }
-
-            FloatCoordinate currentCellFloat = FloatCoordinate(currentCell.x +0.5F, currentCell.y +0.5F);
 
             std::cout << "Intersection: (" << intersection.x << "," << intersection.y << ")" << std::endl;
-            std::vector<Coordinate> nearestNeighbours = findNearestNeighbours(currentCellFloat, intersection);
+            std::vector<Coordinate> nearestNeighbours = findNearestNeighbours(currentCell, intersection);
 
             if(nearestNeighbours.size() == 1){
                 Coordinate nearestNeighbour = nearestNeighbours.at(0);
-
                 std::cout << "      Nearest Neighbor: (" << nearestNeighbour.x << "," << nearestNeighbour.y << ")" << std::endl;
-
                 result.push_back(world->getCell(nearestNeighbour));
-
-                currentCell = nearestNeighbour;
+                currentCell = FloatCoordinate(nearestNeighbour.x +0.5F, nearestNeighbour.y +0.5F);
             }
 
             if (nearestNeighbours.size() == 3){
                 // Diagonal Direction
 
                 for (Coordinate nearestNeighbour: nearestNeighbours){
-                    if(nearestNeighbour.x != currentCell.x && nearestNeighbour.y != currentCell.y){
+                    if(nearestNeighbour.x != (int) currentCell.x && nearestNeighbour.y != (int) currentCell.y){
                         std::cout << "      Nearest Neighbor: (" << nearestNeighbour.x << "," << nearestNeighbour.y << ")" << std::endl;
-                        currentCell = nearestNeighbour;
+                        result.push_back(world->getCell(nearestNeighbour));
+                        currentCell = FloatCoordinate(nearestNeighbour.x +0.5F, nearestNeighbour.y +0.5F);
                     }
                 }
             }

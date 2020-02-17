@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "Coordinate.h"
+#include "FloatCoordinate.h"
 
 namespace srgsim
 {
@@ -9,7 +10,7 @@ namespace srgsim
 class Function
 {
 public:
-    Function(Coordinate& start, Coordinate& end);
+    Function(FloatCoordinate& start, FloatCoordinate& end);
     virtual ~Function() = default;
 
     float m;
