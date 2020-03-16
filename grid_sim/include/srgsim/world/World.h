@@ -47,6 +47,7 @@ public:
     std::recursive_mutex& getDataMutex();
 
     std::vector<SimPerceptions> createSimPerceptionsList();
+    std::vector<const Cell*> castRays();
 
     std::vector<Object*> updateCell(srgsim::CellPerceptions cellPerceptions);
 

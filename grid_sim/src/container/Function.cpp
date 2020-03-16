@@ -15,12 +15,10 @@ namespace srgsim {
 
         if(isinf(m)){
             this->b = 0;
-            std::cout << "m = " << m << " b = " << this->b << std::endl;
             return;
         }
 
         this->b = (end.x * start.y - start.x * end.y) / (end.x - start.x);
-        std::cout << "m = " << m << " b = " << this->b << std::endl;
     }
 
     float Function::calculateY(int x) {

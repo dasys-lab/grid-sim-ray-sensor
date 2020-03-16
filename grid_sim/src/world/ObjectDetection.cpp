@@ -26,34 +26,34 @@ namespace srgsim {
     }
 
     std::vector<CellPerceptions> ObjectDetection::createPerceptions(World *world) {
-        std::map<Coordinate, Cell *> grid = world->getGrid();
+        std::map<Coordinate, Cell*> grid = world->getGrid();
         std::vector<CellPerceptions> cellPerceptionsList;
 
-        std::map<Coordinate, Cell *>::iterator it;
-        for (it = grid.begin(); it != grid.end(); it++) {
+        std::map<Coordinate, Cell *>::iterator it = grid.begin();
+        while(it != grid.end()) {
             CellPerceptions cellPerceptions;
-
-            std::cout << it->first  // string (key)
-                      << ':'
-                      << it->second   // string's value
-                      << std::endl;
 
             cellPerceptions.x = it->first.x;
             cellPerceptions.y = it->first.y;
             std::vector<Object *> objects = it->second->getObjects();
+            Perception *perception = new Perception();
 
-            for (int i = 0; i < objects.size(); i++) {
-                Perception *perception = new Perception();
-                Object *object = objects.at(i);
+            if(objects.empty()){
+                it++;
+                continue;
+            } else {
+                Object *object = objects.at(0);
                 perception->state = object->getState();
                 perception->type = object->getType();
                 perception->objectID = object->getID();
-                perception->x = cellPerceptions.x;
-                perception->y = cellPerceptions.y;
-                cellPerceptions.perceptions.push_back(*perception);
             }
 
+            perception->x = cellPerceptions.x;
+            perception->y = cellPerceptions.y;
+            cellPerceptions.perceptions.push_back(*perception);
+
             cellPerceptionsList.push_back(cellPerceptions);
+            it++;
         }
 
         return cellPerceptionsList;
@@ -194,12 +194,12 @@ namespace srgsim {
 
         for (FloatCoordinate intersection: intersections){
 
-            std::cout << "Intersection: (" << intersection.x << "," << intersection.y << ")" << std::endl;
+            //std::cout << "Intersection: (" << intersection.x << "," << intersection.y << ")" << std::endl;
             std::vector<Coordinate> nearestNeighbours = findNearestNeighbours(currentCell, intersection);
 
             if(nearestNeighbours.size() == 1){
                 Coordinate nearestNeighbour = nearestNeighbours.at(0);
-                std::cout << "      Nearest Neighbor: (" << nearestNeighbour.x << "," << nearestNeighbour.y << ")" << std::endl;
+                //std::cout << "      Nearest Neighbor: (" << nearestNeighbour.x << "," << nearestNeighbour.y << ")" << std::endl;
                 result.push_back(world->getCell(nearestNeighbour));
                 currentCell = FloatCoordinate(nearestNeighbour.x +0.5F, nearestNeighbour.y +0.5F);
             }
@@ -209,7 +209,7 @@ namespace srgsim {
 
                 for (Coordinate nearestNeighbour: nearestNeighbours){
                     if(nearestNeighbour.x != (int) currentCell.x && nearestNeighbour.y != (int) currentCell.y){
-                        std::cout << "      Nearest Neighbor: (" << nearestNeighbour.x << "," << nearestNeighbour.y << ")" << std::endl;
+                        //std::cout << "      Nearest Neighbor: (" << nearestNeighbour.x << "," << nearestNeighbour.y << ")" << std::endl;
                         result.push_back(world->getCell(nearestNeighbour));
                         currentCell = FloatCoordinate(nearestNeighbour.x +0.5F, nearestNeighbour.y +0.5F);
                     }
@@ -219,5 +219,19 @@ namespace srgsim {
         }
 
         return result;
+    }
+
+    Coordinate ObjectDetection::getRayEndpoint(float angle, Coordinate start) {
+        float radians = (fmod(angle, 360)) * M_PI / 180;
+
+        float vec0 = cos(radians);
+        float vec1 = sin(radians);
+
+        float magnitude = sqrt(vec0 * vec0 + vec1 * vec1);
+
+        vec0 = vec0 * magnitude * sightLimit;
+        vec1 = vec1 * magnitude * sightLimit;
+
+        return Coordinate(start.x + vec0, start.y + vec1);
     }
 } // namespace srgsim

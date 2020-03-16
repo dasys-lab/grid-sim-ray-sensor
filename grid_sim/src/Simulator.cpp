@@ -31,11 +31,10 @@ Simulator::Simulator(bool headless)
         : headless(headless)
         , idManager(new essentials::IDManager())
 {
-
-
     this->world = new World();
     this->placeObjectsFromConf();
-    ObjectDetection od (nullptr);
+    this->world->spawnRobot(idManager->generateID(4));
+    /*ObjectDetection od (nullptr);
     od.collectCells(Coordinate(5,5), Coordinate(8,8), world);
     od.collectCells(Coordinate(5,5), Coordinate(5,8), world);
     od.collectCells(Coordinate(5,8), Coordinate(5,5), world);
@@ -44,7 +43,7 @@ Simulator::Simulator(bool headless)
     od.collectCells(Coordinate(5,5), Coordinate(9,12), world);
     od.collectCells(Coordinate(9,12), Coordinate(5,5), world);
     od.collectCells(Coordinate(5,5), Coordinate(12,9), world);
-    od.collectCells(Coordinate(12,9), Coordinate(5,5), world);
+    od.collectCells(Coordinate(12,9), Coordinate(5,5), world);*/
 //    return;
     this->communicationHandlers.push_back(new commands::MoveCommandHandler(world));
     this->communicationHandlers.push_back(new commands::ManipulationHandler(world));
@@ -160,7 +159,10 @@ void Simulator::run()
             this->communication->sendSimPerceptions(simPerceptions);
         }
 
-        // 4. Sleep in order to keep the cpu effort low
+        // 4. Cast rays in every direction once
+        this->world->castRays();
+
+        // 5. Sleep in order to keep the cpu effort low
         auto timePassed = std::chrono::system_clock::now() - start;
         std::chrono::milliseconds millisecondsPassed = std::chrono::duration_cast<std::chrono::milliseconds>(timePassed);
 

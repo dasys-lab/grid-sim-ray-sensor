@@ -17,8 +17,9 @@ namespace srgsim {
     public:
         ObjectDetection(ServiceRobot* robot);
         std::vector<CellPerceptions> createPerceptions(World* world);
-
         std::vector<const Cell*> collectCells(Coordinate p0, Coordinate p1, World* world);
+
+        Coordinate getRayEndpoint(float d, Coordinate coordinate);
 
     private:
         essentials::SystemConfig* sc;

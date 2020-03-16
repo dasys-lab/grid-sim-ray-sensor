@@ -12,9 +12,12 @@ namespace srgsim {
     public:
         ServiceRobot(essentials::IdentifierConstPtr id);
         SimPerceptions createSimPerceptions(World* world);
+        std::vector<const Cell*> castRay(World* world);
         void executeAction(SimCommand sc, World* world);
 
         Object *getCarriedObject();
+
+        ~ServiceRobot() override;
 
     private:
         ObjectDetection* objectDetection;

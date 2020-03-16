@@ -174,6 +174,17 @@ std::vector<SimPerceptions> World::createSimPerceptionsList()
     return perceptions;
 }
 
+std::vector<const Cell*> World::castRays()
+{
+    std::lock_guard<std::recursive_mutex> guard(dataMutex);
+    std::vector<const Cell*> cells;
+    for (auto& robotEntry : this->robots) {
+        std::vector<const Cell*> foundCells = robotEntry.second->castRay(this);
+        cells.insert(cells.end(), foundCells.begin(), foundCells.end());
+    }
+    return cells;
+}
+
 bool World::spawnRobot(essentials::IdentifierConstPtr id)
 {
     std::lock_guard<std::recursive_mutex> guard(dataMutex);
