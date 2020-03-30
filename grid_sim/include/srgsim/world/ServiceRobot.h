@@ -12,7 +12,7 @@ namespace srgsim {
     public:
         ServiceRobot(essentials::IdentifierConstPtr id);
         SimPerceptions createSimPerceptions(World* world);
-        std::vector<const Cell*> castRay(World* world);
+        std::vector<const Cell*> castRay(World* world, float angleIncrement, float angleLimit);
         void executeAction(SimCommand sc, World* world);
 
         Object *getCarriedObject();

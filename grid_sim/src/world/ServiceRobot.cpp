@@ -25,15 +25,14 @@ namespace srgsim {
         return sps;
     }
 
-    std::vector<const Cell *> ServiceRobot::castRay(World *world) {
+    std::vector<const Cell *> ServiceRobot::castRay(World *world, float angleIncrement, float angleLimit) {
         // objects
         float currentAngle = 0;
-        float angleIncrement = 10;
         Coordinate rayStart = this->getCell()->coordinate;
         std::vector<const Cell *> cells;
         std::vector<const Cell *> result;
 
-        while (currentAngle < 360) {
+        while (currentAngle < angleLimit) {
             Coordinate rayEnd = this->objectDetection->getRayEndpoint(currentAngle, rayStart);
             currentAngle += angleIncrement;
             cells = this->objectDetection->collectCells(rayStart, rayEnd, world);
@@ -81,6 +80,12 @@ namespace srgsim {
                     result.push_back(cell);
                     if (output) {
                         std::cout << "Door detected at: " << cell->coordinate << std::endl;
+                    }
+                    break;
+                } else if (type == srgsim::Type::Robot) {
+                    result.push_back(cell);
+                    if (output) {
+                        std::cout << "Robot detected at: " << cell->coordinate << std::endl;
                     }
                     break;
                 }

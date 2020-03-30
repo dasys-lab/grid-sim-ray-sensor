@@ -179,7 +179,7 @@ std::vector<const Cell*> World::castRays()
     std::lock_guard<std::recursive_mutex> guard(dataMutex);
     std::vector<const Cell*> cells;
     for (auto& robotEntry : this->robots) {
-        std::vector<const Cell*> foundCells = robotEntry.second->castRay(this);
+        std::vector<const Cell*> foundCells = robotEntry.second->castRay(this, 10, 360);
         cells.insert(cells.end(), foundCells.begin(), foundCells.end());
     }
     return cells;
